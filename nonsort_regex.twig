@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+{% block content %}
+{% autoescape true %}
+<mods xmlns="http://www.loc.gov/mods/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mods="http://www.loc.gov/mods/v3" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-4.xsd"> 
+
+{% for titles in data %}
+
+{# A, An, The split, all cases #}
+
+{% if titles|preg_match('/^(A |An |The )/i')%}
+<preg_matched>Simple Article with space</preg_matched>
+{% set split = titles|preg_split('/^(A |An |The )/i')%}
+{% set sort = split[1] %}
+{% set delim = titles|split(sort) %}
+<nonsort>{{ delim[0] }}</nonsort>
+<sort>{{ split[1] }}</sort>
+{% endif %}
+
+{# punctuation followed by a, an, the, any case#}
+
+{% if titles|preg_match('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…)(An |A |The )/i') %}
+<preg_matched>punctiotion followed by a an the any case</preg_matched>
+{% set sort = titles|preg_split('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…)(An |A |The )/i') %}
+{% set delim = titles|split(sort[1])%}
+<nonsort>{{delim[0]}}</nonsort>
+<sort>{{sort[1]}}</sort>
+{% endif %}
+
+{# Symbol and space and|or article #}
+
+{% if titles|preg_match('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…) *(An |A |The )/i') %}
+<preg_matched>symbol and space and|or article</preg_matched>
+{% set sort = titles|preg_split('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…) *(An |A |The )/i') %}
+{% set delim = titles|split(sort[1])%}
+<nonsort>{{delim[0]}}</nonsort>
+<sort>{{sort[1]}}</sort>
+{% endif %}
+
+{#Article, space and|or symbol#}
+{% if titles|preg_match('/^(A\\s+|An\\s+|The\\s+)(\"|\'|\\[|“|\\(|‘|\&quot\;|…)?/i') %}
+<preg_matched>Article space and|or symbol </preg_matched>
+{% set sort = titles|preg_split('/^A\\s+|An\\s+|The\\s+(\"|\'|\\[|“|\\(|‘|\&quot\;|…)?/i') %}
+{% set delim = titles|split(sort[1]) %}
+<nonsort>{{delim[0]}}</nonsort>
+<sort>{{sort[1]}}</sort>
+{% endif %}
+
+
+{# Symbol or symbol space #} 
+
+{% if titles|preg_match('/(\"|\'|\\[|“|\\(|‘|\&quot\;|…) ?/') %}
+<preg_matched>symbol or symbol space</preg_matched>
+{% set sort = titles|preg_split('/(\"|\'|\\[|“|\\(|‘|\&quot\;|…) ?/') %}
+{% set delim = titles|split(sort[1]) %}
+<nonsort>{{delim[0]}}</nonsort>
+<sort>{{sort[1]}}</sort>
+{% endif %}
+
+{% endfor %}
+
+</mods>
+{% endautoescape %}
+{% endblock %}
