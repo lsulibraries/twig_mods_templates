@@ -5,55 +5,40 @@
 
 {% for titles in data %}
 
-{# A, An, The split, all cases #}
-
-{% if titles|preg_match('/^(A |An |The )/i')%}
-<preg_matched>Simple Article with space</preg_matched>
-{% set split = titles|preg_split('/^(A |An |The )/i')%}
-{% set sort = split[1] %}
-{% set delim = titles|split(sort) %}
-<nonsort>{{ delim[0] }}</nonsort>
-<sort>{{ split[1] }}</sort>
-{% endif %}
-
-{# punctuation followed by a, an, the, any case#}
-
-{% if titles|preg_match('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…)(An |A |The )/i') %}
-<preg_matched>punctiotion followed by a an the any case</preg_matched>
-{% set sort = titles|preg_split('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…)(An |A |The )/i') %}
-{% set delim = titles|split(sort[1])%}
-<nonsort>{{delim[0]}}</nonsort>
-<sort>{{sort[1]}}</sort>
-{% endif %}
-
-{# Symbol and space and|or article #}
-
-{% if titles|preg_match('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…) *(An |A |The )/i') %}
-<preg_matched>symbol and space and|or article</preg_matched>
-{% set sort = titles|preg_split('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…) *(An |A |The )/i') %}
-{% set delim = titles|split(sort[1])%}
-<nonsort>{{delim[0]}}</nonsort>
-<sort>{{sort[1]}}</sort>
-{% endif %}
-
-{#Article, space and|or symbol#}
+{# Article, space, optional symbol #}
 {% if titles|preg_match('/^(A\\s+|An\\s+|The\\s+)(\"|\'|\\[|“|\\(|‘|\&quot\;|…)?/i') %}
-<preg_matched>Article space and|or symbol </preg_matched>
-{% set sort = titles|preg_split('/^A\\s+|An\\s+|The\\s+(\"|\'|\\[|“|\\(|‘|\&quot\;|…)?/i') %}
+<preg_matched>Article space and|or symbol</preg_matched>
+{% set sort = titles|preg_split('/^(A\\s+|An\\s+|The\\s+)(\"|\'|\\[|“|\\(|‘|\&quot\;|…)?/i') %}
 {% set delim = titles|split(sort[1]) %}
-<nonsort>{{delim[0]}}</nonsort>
-<sort>{{sort[1]}}</sort>
+<nonsort>{{ delim[0]|raw }}</nonsort>
+<sort>{{ sort[1] }}</sort>
 {% endif %}
 
+{# Symbol, article, any whitespace #}
+{% if titles|preg_match('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…)(An\\s+|A\\s+|The\\s+)/i') %}
+<preg_matched>Symbol, article, any whitespace</preg_matched>
+{% set sort = titles|preg_split('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…)(An\\s+|A\\s+|The\\s+)/i') %}
+{% set delim = titles|split(sort[1])%}
+<nonsort>{{ delim[0]|raw }}</nonsort>
+<sort>{{ sort[1] }}</sort>
+{% endif %}
+
+{# Symbol, any whitespace, article #}
+{% if titles|preg_match('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…)\\s+(An\\s+|A\\s+|The\\s+)/i') %}
+<preg_matched>Symbol, any whitespace, article</preg_matched>
+{% set sort = titles|preg_split('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…)\\s+(An\\s+|A\\s+|The\\s+)/i') %}
+{% set delim = titles|split(sort[1])%}
+<nonsort>{{ delim[0]|raw }}</nonsort>
+<sort>{{ sort[1] }}</sort>
+{% endif %}
 
 {# Symbol or symbol space #} 
-
-{% if titles|preg_match('/(\"|\'|\\[|“|\\(|‘|\&quot\;|…) ?/') %}
+{% if titles|preg_match('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…) ?/') %}
 <preg_matched>symbol or symbol space</preg_matched>
-{% set sort = titles|preg_split('/(\"|\'|\\[|“|\\(|‘|\&quot\;|…) ?/') %}
+{% set sort = titles|preg_split('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…) ?/') %}
 {% set delim = titles|split(sort[1]) %}
-<nonsort>{{delim[0]}}</nonsort>
-<sort>{{sort[1]}}</sort>
+<nonsort>{{ delim[0]|raw }}</nonsort>
+<sort>{{ sort[1] }}</sort>
 {% endif %}
 
 {% endfor %}
