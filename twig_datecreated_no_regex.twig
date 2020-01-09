@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+{% block content %}
+{% autoescape true %}
+<mods xmlns="http://www.loc.gov/mods/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mods="http://www.loc.gov/mods/v3" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-4.xsd"> 
+
+<titleInfo>
+        <title>{{ data.title|trim('.')|escape|raw }}</title>
+</titleInfo>
+
+<identifier type="local" displayLabel="Item Number">{{ attribute(data, 'identifier item number')|trim }}</identifier>
+
+
+{% set created = attribute(data, 'date created') %}
+{% set issued = attribute(data, 'date issued') %}
+
+{% set qual_approx = 'qualifier="approximate"'%}
+{% set qual_quest = 'qualifier="questionable"'%}
+{% set qual_inferred = 'qualifier=inferred"'%}
+
+{% if 'Circa' in created %}
+{% set circa_created = true %}
+{% endif %}
+
+{% if '-' in created and created|length == 9 %}
+{% set range_created = true %}
+{% endif %}
+
+{% if '?' in created %}
+{% set created_qual = qual_quest %}
+{% endif %}
+
+{% if '[' in created %}
+{% set created_qual = qual_inferred %}
+{% endif %}
+
+{% if 'Circa' in issued  %}
+{% set circa_issued = true %}
+{% endif %}
+
+{% if '-' in issued and issued|length == 9 %}
+{% set range_issued = true %}
+{% endif %}
+
+{% if '?' in issued %}
+{% set issue_qual = qual_quest %}
+{% endif %}
+
+{% if '[' in created %}
+{% set issued_qual = qual_inferred %}
+{% endif %}
+
+{% if created or issued %}
+<originInfo>
+{# non-range dates #}
+{% if created and not circa_created and not range_created%}
+    <dateCreated keyDate="yes" {{ created_qual|raw }}>{{ created }}</dateCreated>
+{% endif %}
+{% if issued and not circa_issued and not range_issued %}
+    <dateIssued {{ issue_qual|raw }}>{{ issued }}</dateIssued>
+{% endif %}
+
+{# ranged dates #}
+
+
+{% if created and range_created %}
+{% set createdrange = created|trim('Circa ')|split('-') %}
+    <dateCreated keyDate="yes"  point="start">{{ createdrange[0] }}</dateCreated>
+    <dateCreated  point="end">{{ createdrange[1] }}</dateCreated>
+{% endif %}
+
+{% if created and circa_created and range_created %}
+{% set createdrange = created|trim('Circa ')|split('-') %}
+    <dateCreated keyDate="yes" {{ qual_approx }} point="start">{{ createdrange[0] }}</dateCreated>
+    <dateCreated  {{ qual_approx }} point="end">{{ createdrange[1] }}</dateCreated>
+{% endif %}
+
+{% if issued and circa_issued and range_issued %}
+{% set issuedrange = issued|trim('Circa ')|split('-') %}
+    <dateIssued keyDate="yes" {{ qual_approx }} point="start">{{ issuedrange[0] }}</dateIssued>
+    <dateIssued  {{ qual_approx }} point="end">{{ issuedrange[1] }}</dateIssued>
+{% endif %}
+
+{# other possibilites #}
+{% if issued and circa_issued and not range_issued %}
+    <dateIssued keyDate="yes" {{ qual_approx }}>{{ issued }}</dateIssued>
+{% endif %}
+
+{% set dig_date = attribute(data, 'digitization date') %}
+{% if dig_date %}
+    <dateCaptured encoding="w3cdtf">{{ dig_date }}</dateCaptured>
+{% endif %}
+</originInfo>
+{% endif %}
+
+
+{# two spaces in 'subject  topic' #}
+{% if  attribute(data, 'subject  topic') %}
+{% for topic in attribute(data, 'subject  topic')|split(';')|raw %}
+<subject authority="lcsh" displayLabel="Subject - Topic">
+{% if '--' in topic %}
+{% for subtopic in topic|split('--') %}
+    <topic>{{ subtopic|trim }}</topic>
+{% endfor %}
+{% else %}
+    <topic>{{ topic }}</topic>
+{% endif %}
+</subject> 
+{% endfor %}
+{% endif %}
+
+{% if attribute(data, 'subject  geographic') %}
+{% set geographs = attribute(data, 'subject  geographic') %}
+{% for geo in geographs|split(';')|raw %}
+<subject authority="lcsh" displayLabel="Subject - Location">
+    <geographic>{{ geo|trim|raw }}</geographic>
+</subject>
+{% endfor %}
+{% endif %}
+
+{% if attribute(data, 'subject  temporal') %}
+<subject authority="lcsh" displayLabel="Subject - Time Period">
+    <temporal>{{ attribute(data, 'subject  temporal')|trim|raw }}</temporal>
+</subject>
+{% endif %}
+
+{% if attribute(data, 'subject  name') %}
+{% set names = attribute(data, 'subject  name personal') %}
+{% for name in names|split(';')|raw %}
+<subject displayLabel="Subject - Name">
+    <name authority="naf" type="personal">
+        <namePart>{{ name|trim|raw }}</namePart>
+    </name>
+</subject>
+{% endfor %}
+{% endif %}
+
+{% if attribute(data, 'subject  name corporate') %}
+{% set names = attribute(data, 'subject  name corporate') %}
+{% for name in names|split(';')|raw %}
+<subject displayLabel="Subject - Name">
+    <name authority="naf" type="corporate">
+        <namePart>{{ name|trim|raw }}</namePart>
+    </name>
+</subject>
+{% endfor %}
+{% endif %}
+
+
+{% if attribute(data, 'abstract description') %}
+<abstract>{{ attribute(data, 'abstract description')|trim|escape|raw }}</abstract>
+{% endif %} 
+
+{% if data.note %}
+<note type="content">{{ data.note|trim|raw }}</note>
+{% endif %}
+
+
+
+{% if  attribute(data, 'type of resource') %}
+<typeOfResource>{{ attribute(data, 'type of resource')|trim|lower }}</typeOfResource>
+{% endif %} 
+
+{% if attribute(data, 'form') %}
+<physicalDescription>
+    <note type="medium"></note>
+{% if attribute(data, 'internet media type') %}
+    <internetMediaType>{{ attribute(data, 'internet media type')|trim|lower }}</internetMediaType>
+{% endif%}
+{% if attribute(data, 'digital origin') %}
+        <digitalOrigin>reformatted digital</digitalOrigin>
+{% endif %}
+    <form authority="aat">{{ data.form|trim }}</form>
+
+</physicalDescription>
+{% endif %} 
+
+{% if attribute(data, 'source') %}
+<name type="corporate" authority="naf" authorityURI="http://id.loc.gov/authorities/names" valueURI="http://id.loc.gov/authorities/names/no2015036095" displayLabel="Contributing Repository">
+    <namePart>{{ data.source|trim|raw }}</namePart>
+    <role>
+        <roleTerm type="text" authority="marcrelator" authorityURI="http://id.loc.gov/vocabulary/relators" valueURI="http://id.loc.gov/vocabulary/relators/rps">Repository</roleTerm>
+    </role>
+</name>
+{% endif %}
+
+
+
+{% set dig_coll = attribute(data, 'digital collection') %}
+{% set parent_item = attribute(data, 'parent item title') %}
+
+{% if dig_coll or parent_item %}
+<relatedItem type="host">
+{% if parent_item %}
+    <titleInfo displayLabel="Parent Item Title">
+        <title>{{ parent_item }}</title>
+    </titleInfo>
+{% endif %}
+{% if dig_coll %}
+    <titleInfo displayLabel="Digital Collection">
+        <title>{{ dig_coll|raw }}</title>
+    </titleInfo>
+{% endif %}
+{% if attribute(data, 'relation') %}
+    <location>
+            <url displayLabel="Relation">{{ data.relation }}</url>
+    </location>
+{% endif %}
+{% if attribute(data, 'repository collection guide')%}
+     <location>
+        <url displayLabel="Repository Collection Guide"> {{ attribute(data, 'repository collection guide') }}</url>
+    </location>
+{% endif %}
+{% if attribute(data, 'arrangement record group') %}
+    <identifier type="local" displayLabel="Record Group">{{ attribute(data, 'arrangement record group') }}</identifier>
+{% endif %}
+{% if attribute(data, 'arrangement box') %}
+    <titleInfo displayLabel="Box">
+            <partNumber>{{ attribute(data, 'arrangement box') }}</partNumber>
+    </titleInfo>
+{% endif %}
+{% if attribute(data, 'arrangement folder') %}
+    <titleInfo displayLabel="Folder">
+            <partNumber>{{ attribute(data, 'arrangement folder') }}</partNumber>
+    </titleInfo>
+{% endif %}
+</relatedItem>
+{% endif %} 
+
+
+{% if  attribute(data, 'language') %}
+{% for language in attribute(data, 'language')|split (';') %}
+<language>
+    <languageTerm type="code" authority="iso639-2b">{{ language|trim|lower }}</languageTerm>
+</language>
+{% endfor %}
+{% endif %} 
+
+{% if attribute(data, 'location physical location') %}
+<location>
+    <physicalLocation displayLabel="Physical Location" xlink:href="http://lib.lsu.edu">{{ attribute(data, 'location physical location')|raw }}</physicalLocation>
+{% endif %}
+{% if attribute(data, 'location oclc member symbol') %}
+    <physicalLocation displayLabel="OCLC Member Symbol" xlink:href="http://lib.lsu.edu">{{ attribute(data, 'location oclc member symbol') }}</physicalLocation>
+{% endif %}
+{% if attribute(data, 'location sublocation') %}
+    <holdingSimple>
+        <copyInformation>
+            <subLocation>{{ attribute(data, 'location sublocation')|raw }}</subLocation>
+            <shelfLocator>{{ attribute(data, 'location shelving location') }}</shelfLocator>
+        </copyInformation>
+    </holdingSimple>
+</location>
+{% endif %}
+
+{% if attribute(data, 'rights') %}
+    <accessCondition type="use and reproduction" displayLabel="Rights Statement">{{ data.rights|trim|escape|raw }}</accessCondition>
+{% endif %}
+
+{% if attribute(data, 'contact information') %}
+    <accessCondition type="use and reproduction" displayLabel="Contact Information">{{ attribute(data, 'contact information')|trim|escape|raw }}</accessCondition>
+{% endif %}
+
+{% if attribute(data, 'preferred citation')%}
+    <note type="preferred citation" displayLabel="Preferred Citation">{{ attribute(data, 'preferred citation')|trim|escape|raw }}</note>
+{% endif %}
+
+{% if attribute(data, 'digitized by') %}
+    <name type="personal" displayLabel="Digitized by">
+        <namePart>{{ attribute(data, 'digitized by') }}</namePart>
+        <role>
+            <roleTerm type="text" authority="marcrelator" authorityURI="http://id.loc.gov/vocabulary/relators" valueURI="http://id.loc.gov/vocabulary/relators/fac">Facsimilist</roleTerm>
+        </role>
+    </name>
+    <extension>
+        <digitizedBy displayLabel="Digital Reproduction Information">{{ attribute(data, 'digital reproduction information')|raw }}</digitizedBy>
+    </extension>
+{% endif %}
+
+    <recordInfo>
+        <recordContentSource authority="local">lsu/en</recordContentSource>
+        <recordCreationDate encoding="w3cdtf">{{attribute(data, 'record creation date') }}</recordCreationDate>
+    </recordInfo>
+</mods>
+{% endautoescape %}
+{% endblock %}
