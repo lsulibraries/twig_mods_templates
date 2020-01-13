@@ -287,7 +287,7 @@
     <physicalLocation displayLabel="Physical Location" xlink:href="http://lib.lsu.edu">{{ attribute(data, 'location physical location')|raw }}</physicalLocation>
 {% endif %}
 {% if attribute(data, 'location oclc member symbol') %}
-    <physicalLocation displayLabel="OCLC Member Symbol" xlink:href="http://lib.lsu.edu">{{ attribute(data, 'location oclc member symbol') }}</physicalLocation>
+    <physicalLocation authority="oclcorg" displayLabel="OCLC Member Symbol" xlink:href="http://lib.lsu.edu">{{ attribute(data, 'location oclc member symbol') }}</physicalLocation>
 {% endif %}
 {% if attribute(data, 'location sublocation') %}
     <holdingSimple>
