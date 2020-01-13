@@ -8,27 +8,45 @@
 {% set sort = data.title|preg_split('/^(A\\s+|An\\s+|The\\s+)(\"|\'|\\[|“|\\(|‘|\&quot\;|…)?/i') %}
 {% set delim = data.title|split(sort[1]) %}
 
+<titleInfo>
+        <nonSort>{{ delim[0]|raw }}</nonSort>
+        <title>{{ sort[1]|raw }}</title>
+</titleInfo>
+
+
 {# Symbol, article, any whitespace #}
 {% elseif data.title|preg_match('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…)(An\\s+|A\\s+|The\\s+)/i') %}
 {% set sort = data.title|preg_split('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…)(An\\s+|A\\s+|The\\s+)/i') %}
 {% set delim = data.title|split(sort[1])%}
+
+<titleInfo>
+        <nonSort>{{ delim[0]|raw }}</nonSort>
+        <title>{{ sort[1]|raw }}</title>
+</titleInfo>
+
 
 {# Symbol, any whitespace, article #}
 {% elseif data.title|preg_match('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…)\\s+(An\\s+|A\\s+|The\\s+)/i') %}
 {% set sort = data.title|preg_split('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…)\\s+(An\\s+|A\\s+|The\\s+)/i') %}
 {% set delim = data.title|split(sort[1])%}
 
+
+<titleInfo>
+        <nonSort>{{ delim[0]|raw }}</nonSort>
+        <title>{{ sort[1]|raw }}</title>
+</titleInfo>
+
+
 {# Symbol or symbol space #} 
 {% elseif data.title|preg_match('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…) ?/') %}
 {% set sort = data.title|preg_split('/^(\"|\'|\\[|“|\\(|‘|\&quot\;|…) ?/') %}
 {% set delim = data.title|split(sort[1]) %}
 
-{% if sort and delim == true %}
 <titleInfo>
         <nonSort>{{ delim[0]|raw }}</nonSort>
         <title>{{ sort[1]|raw }}</title>
 </titleInfo>
-{% endif %}
+
 {% else %}
 <titleInfo>
         <title>{{ data.title|trim('.')|raw}}</title>
