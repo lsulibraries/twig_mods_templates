@@ -69,15 +69,16 @@
 {% set created = attribute(data, 'date created') %}
 {% set issued = attribute(data, 'date issued') %}
 
-{% set qual_approx = 'qualifier="approximate"'%}
+
 {% set qual_quest = 'qualifier="questionable"'%}
-{% set qual_inferred = 'qualifier=inferred"'%}
+{% set qual_inferred = 'qualifier="inferred"'%}
+{% set qual_approx = 'qualifier="approximate"'%}
 
 {% if 'Circa' in created %}
 {% set circa_created = true %}
 {% endif %}
 
-{% if '-' in created and created|length == 9 %}
+{% if '-' in created and created|length == 9 or created|length == 15  %}
 {% set range_created = true %}
 {% endif %}
 
@@ -89,11 +90,13 @@
 {% set created_qual = qual_inferred %}
 {% endif %}
 
+
+
 {% if 'Circa' in issued  %}
 {% set circa_issued = true %}
 {% endif %}
 
-{% if '-' in issued and issued|length == 9 %}
+{% if '-' in issued and issued|length == 9 or 15 %}
 {% set range_issued = true %}
 {% endif %}
 
@@ -109,26 +112,30 @@
 <originInfo>
 {# non-range dates #}
 {% if created and not circa_created and not range_created%}
-    <dateCreated keyDate="yes" encoding="w3cdtf" {{ created_qual|raw }}>{{ created }}</dateCreated>
+    <dateCreated keyDate="yes" encoding="w3cdtf" {{ created_qual|raw }}>{{ created|trim('[')|trim(']')|trim('?') }}</dateCreated>
 {% endif %}
 {% if issued and not circa_issued and not range_issued %}
     <dateIssued encoding="w3cdtf" {{ issue_qual|raw }}>{{ issued }}</dateIssued>
+{% endif %}
+{% if created and circa_created and not range_created %}
+<dateCreated keyDate="yes" {{ qual_approx|raw }} encoding="w3cdtf">{{ created|trim('Circa ') }}</dateCreated>
 {% endif %}
 
 {# ranged dates #}
 
 
-{% if created and range_created %}
+{% if created and range_created and not circa_created %}
 {% set createdrange = created|trim('Circa ')|split('-') %}
     <dateCreated keyDate="yes"  point="start" encoding="w3cdtf">{{ createdrange[0] }}</dateCreated>
     <dateCreated  point="end" encoding="w3cdtf">{{ createdrange[1] }}</dateCreated>
 {% endif %}
 
-{% if created and circa_created and range_created %}
+{% if created and range_created and circa_created %}
 {% set createdrange = created|trim('Circa ')|split('-') %}
-    <dateCreated keyDate="yes" {{ qual_approx }} point="start" encoding="w3cdtf">{{ createdrange[0] }}</dateCreated>
-    <dateCreated  {{ qual_approx }} point="end" encoding="w3cdtf">{{ createdrange[1] }}</dateCreated>
+    <dateCreated keyDate="yes" {{ qual_approx|raw }} point="start" encoding="w3cdtf">{{ createdrange[0] }}</dateCreated>
+    <dateCreated  {{ qual_approx|raw }} point="end" encoding="w3cdtf">{{ createdrange[1] }}</dateCreated>
 {% endif %}
+
 
 {% if issued and circa_issued and range_issued %}
 {% set issuedrange = issued|trim('Circa ')|split('-') %}
@@ -206,7 +213,7 @@
 {% set names = attribute(data, 'subject  name corporate') %}
 {% for name in names|split(';')|raw %}
 <subject displayLabel="Subject - Name">
-    <name type="personal">
+    <name type="corporate">
 {% if '--' in name %}
 {% for subname in name|split('--') %}
         <namePart>{{ subname|trim|raw }}</namePart>
