@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 {% block content %}
 {% autoescape true %}
-<mods xmlns="http://www.loc.gov/mods/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mods="http://www.loc.gov/mods/v3" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-4.xsd"> 
+<mods xmlns="http://www.loc.gov/mods/v3" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xlink="http://www.w3.org/1999/xlink">
 
 {# Article, space, optional symbol #}
 {% if data.title|preg_match('/^(A\\s+|An\\s+|The\\s+)(\"|\'|\\[|“|\\(|‘|\&quot\;|…)?/i') %}
@@ -96,7 +96,7 @@
 {% set circa_issued = true %}
 {% endif %}
 
-{% if '-' in issued and issued|length == 9 or 15 %}
+{% if '-' in issued and issued|length == 9 or or issued|length == 15 %}
 {% set range_issued = true %}
 {% endif %}
 
@@ -136,11 +136,17 @@
     <dateCreated  {{ qual_approx|raw }} point="end" encoding="w3cdtf">{{ createdrange[1] }}</dateCreated>
 {% endif %}
 
+{% if issued and range_issued and not circa_issued %}
+{% set issuedrange = issued|trim('Circa ')|split('-') %}
+    <dateCreated keyDate="yes"  point="start" encoding="w3cdtf">{{ issuedrange[0] }}</dateCreated>
+    <dateCreated  point="end" encoding="w3cdtf">{{ issuedrange[1] }}</dateCreated>
+{% endif %}
+
 
 {% if issued and circa_issued and range_issued %}
 {% set issuedrange = issued|trim('Circa ')|split('-') %}
-    <dateIssued keyDate="yes" {{ qual_approx }} point="start" encoding="w3cdtf">{{ issuedrange[0] }}</dateIssued>
-    <dateIssued  {{ qual_approx }} point="end" encoding="w3cdtf">{{ issuedrange[1] }}</dateIssued>
+    <dateIssued keyDate="yes" {{ qual_approx|raw }} point="start" encoding="w3cdtf">{{ issuedrange[0] }}</dateIssued>
+    <dateIssued  {{ qual_approx|raw }} point="end" encoding="w3cdtf">{{ issuedrange[1] }}</dateIssued>
 {% endif %}
 
 {# other possibilites #}
