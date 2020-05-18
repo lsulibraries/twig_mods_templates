@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 {% block content %}
 {% autoescape true %}
-<mods xmlns="http://www.loc.gov/mods/v3" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xlink="http://www.w3.org/1999/xlink">
+<mods xmlns="http://www.loc.gov/mods/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:mods="http://www.loc.gov/mods/v3" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-4.xsd"> 
 
 {# Article, space, optional symbol #}
 {% if data.title|preg_match('/^(A\\s+|An\\s+|The\\s+)(\"|\'|\\[|“|\\(|‘|\&quot\;|…)?/i') %}
@@ -68,7 +68,7 @@
 
 {% set created = attribute(data, 'date created') %}
 {% set issued = attribute(data, 'date issued') %}
-
+{% set compound_child = attribute(data, 'sequence') %}
 
 {% set qual_quest = 'qualifier="questionable"'%}
 {% set qual_inferred = 'qualifier="inferred"'%}
@@ -78,7 +78,7 @@
 {% set circa_created = true %}
 {% endif %}
 
-{% if '-' in created and created|length == 9 or created|length == 15  %}
+{% if '-' in created and created|length == 9 or created|length == 15 %}
 {% set range_created = true %}
 {% endif %}
 
@@ -90,13 +90,11 @@
 {% set created_qual = qual_inferred %}
 {% endif %}
 
-
-
 {% if 'Circa' in issued  %}
 {% set circa_issued = true %}
 {% endif %}
 
-{% if '-' in issued and issued|length == 9 or or issued|length == 15 %}
+{% if '-' in issued and issued|length == 9 or issued|length == 15 %}
 {% set range_issued = true %}
 {% endif %}
 
@@ -108,7 +106,7 @@
 {% set issued_qual = qual_inferred %}
 {% endif %}
 
-{% if created or issued %}
+{% if created or issued or compound_child %}
 <originInfo>
 {# non-range dates #}
 {% if created and not circa_created and not range_created%}
@@ -117,12 +115,12 @@
 {% if issued and not circa_issued and not range_issued %}
     <dateIssued encoding="w3cdtf" {{ issue_qual|raw }}>{{ issued }}</dateIssued>
 {% endif %}
-{% if created and circa_created and not range_created %}
-<dateCreated keyDate="yes" {{ qual_approx|raw }} encoding="w3cdtf">{{ created|trim('Circa ') }}</dateCreated>
-{% endif %}
 
 {# ranged dates #}
 
+{% if created and circa_created and not range_created %}
+<dateCreated keyDate="yes" {{ qual_approx|raw }} encoding="w3cdtf">{{ created|trim('Circa ') }}</dateCreated>
+{% endif %}
 
 {% if created and range_created and not circa_created %}
 {% set createdrange = created|trim('Circa ')|split('-') %}
@@ -142,7 +140,6 @@
     <dateCreated  point="end" encoding="w3cdtf">{{ issuedrange[1] }}</dateCreated>
 {% endif %}
 
-
 {% if issued and circa_issued and range_issued %}
 {% set issuedrange = issued|trim('Circa ')|split('-') %}
     <dateIssued keyDate="yes" {{ qual_approx|raw }} point="start" encoding="w3cdtf">{{ issuedrange[0] }}</dateIssued>
@@ -154,8 +151,7 @@
     <dateIssued keyDate="yes" encoding="w3cdtf" {{ qual_approx }}>{{ issued }}</dateIssued>
 {% endif %}
 
-{% set dig_date = attribute(data, 'digitization date') %}
-{% if dig_date %}
+{% if dig_date or compound_child %}
     <dateCaptured encoding="w3cdtf">{{ dig_date }}</dateCaptured>
 {% endif %}
 </originInfo>
@@ -208,7 +204,7 @@
         <namePart>{{ subname|trim|raw }}</namePart>
 {% endfor %}
 {% else %}
-		<namePart>{{ name|trim|raw }}</namePart>
+        <namePart>{{ name|trim|raw }}</namePart>
 {% endif %}
     </name>
 </subject>
@@ -225,7 +221,7 @@
         <namePart>{{ subname|trim|raw }}</namePart>
 {% endfor %}
 {% else %}
-		<namePart>{{ name|trim|raw }}</namePart>
+        <namePart>{{ name|trim|raw }}</namePart>
 {% endif %}
     </name>
 </subject>
@@ -247,17 +243,17 @@
 <typeOfResource>{{ attribute(data, 'type of resource')|trim|lower }}</typeOfResource>
 {% endif %} 
 
-{% if attribute(data, 'form') %}
+{% if (attribute(data, 'form') or attribute(data, 'sequence')) %}
 <physicalDescription>
-    <note type="medium"></note>
 {% if attribute(data, 'internet media type') %}
     <internetMediaType>{{ attribute(data, 'internet media type')|trim|lower }}</internetMediaType>
 {% endif%}
 {% if attribute(data, 'digital origin') %}
         <digitalOrigin>reformatted digital</digitalOrigin>
 {% endif %}
+{% if attribute(data, 'form')|length > 1 %}
     <form authority="aat" authorityURI="http://vocab.getty.edu/aat" valueURI="http://vocab.getty.edu/page/aat/300046300">{{ data.form|trim }}</form>
-
+{% endif %}
 </physicalDescription>
 {% endif %} 
 
